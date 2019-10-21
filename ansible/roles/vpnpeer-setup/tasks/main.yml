@@ -7,14 +7,43 @@
 
 - name: install linux-headers
   apt:
-    name: linux-headers-{{ uname.stdout }}
+    name: linux-headers-amd64 
     update_cache: yes
-  when: not "+" in uname.stdout
 
-- name: add wireguard repo
+- name: Add unstable repository
   apt_repository:
-    repo: ppa:wireguard/wireguard
+    repo: "deb http://deb.debian.org/debian/ unstable main"
     state: present
+    update_cache: yes
+
+- name: pin priority for unstable packages (debian)
+  become: yes
+  shell: |
+    printf 'Package: *\nPin: release a=unstable\nPin-Priority: 90\n' \
+      > /etc/apt/preferences.d/limit-unstable
+
+- name: install build-essential 
+  apt:
+    name: build-essential 
+
+
+- name: install wireguard
+  apt:
+    name: wireguard
+
+- name: generate wireguard private key
+  shell: |
+    dpkg-reconfigure wireguard-dkms 
+
+- name: link headers for wireguard build
+  become: yes
+  file:
+    dest: /lib/modules/4.19.0-6-cloud-amd64/build
+    src: /usr/src/linux-headers-4.19.0-6-amd64
+    owner: root
+    group: root
+    state: link
+    force: yes
 
 - name: install wireguard
   apt:
