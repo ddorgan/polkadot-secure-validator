@@ -5,10 +5,8 @@
   register: uname
   changed_when: False
 
-- name: install linux-headers
-  apt:
-    name: linux-headers-amd64 
-    update_cache: yes
+- name: install linux linux-headers
+  action: shell apt-get install -y bc linux-headers-$(uname -r|sed 's/[^-]*-[^-]*-//')
 
 - name: Add unstable repository
   apt_repository:
@@ -25,25 +23,6 @@
 - name: install build-essential 
   apt:
     name: build-essential 
-
-
-- name: install wireguard
-  apt:
-    name: wireguard
-
-- name: generate wireguard private key
-  shell: |
-    dpkg-reconfigure wireguard-dkms 
-
-- name: link headers for wireguard build
-  become: yes
-  file:
-    dest: /lib/modules/4.19.0-6-cloud-amd64/build
-    src: /usr/src/linux-headers-4.19.0-6-amd64
-    owner: root
-    group: root
-    state: link
-    force: yes
 
 - name: install wireguard
   apt:
